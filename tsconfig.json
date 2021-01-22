@@ -12,6 +12,8 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "noImplicitAny": false,
+    "strictNullChecks": false, //关闭null检查
     "types": [
       "webpack-env"
     ],
