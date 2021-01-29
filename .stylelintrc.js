@@ -1,6 +1,6 @@
 module.exports = {
   extends: ['stylelint-config-standard-scss', 'stylelint-config-prettier'],
-  plugins: ['stylelint-order', 'stylelint-nimbus-css-check'],
+  plugins: ['stylelint-order'],
   rules: {
     'order/order': [
       'declarations',
