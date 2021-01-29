@@ -1,6 +1,6 @@
 const path = require("path");
 const env = process.env.VUE_APP_ENV || "development";
-const { deploy: address } = require("./config");
+const { deploy: address } = require("./naive.config");
 const RESOURCE_BASE_ADDR = address[env].frontend;
 
 const resolve = dir => {
@@ -20,13 +20,18 @@ module.exports = {
   },
   css: {
     loaderOptions: {
-      less: {
-        javascriptEnabled: true
-      },
-      sass: {
-        javascriptEnabled: true
-      }
+      // less: {
+      //   javascriptEnabled: true
+      // },
+      // sass: {
+      //   javascriptEnabled: true
+      // }
     }
+  },
+  pluginOptions: {
+    configBasedir: "../src",
+    lintStyleOnBuild: false,
+    stylelint: {}
   },
   configureWebpack: {
     resolve: {
