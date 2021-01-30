@@ -1,0 +1,887 @@
+syntax = "proto3";
+package ecos_app;
+
+option go_package = "ecosappv1";
+
+service ECOS_APP {
+
+  // application
+  rpc IsApplicationExists(IsApplicationExistsRequest)
+      returns (IsApplicationExistsReply);
+  rpc CreateApplication(CreateApplicationRequest)
+      returns (CreateApplicationReply);
+  rpc DeleteApplication(DeleteApplicationRequest)
+      returns (DeleteApplicationReply);
+  rpc UpdateApplication(UpdateApplicationRequest)
+      returns (UpdateApplicationReply);
+  rpc GetApplication(GetApplicationRequest) returns (GetApplicationReply);
+  rpc ListApplication(ListApplicationRequest) returns (ListApplicationReply);
+  rpc UpdateEmailNotify(UpdateEmailNotifyRequest)
+      returns (UpdateEmailNotifyReply);
+  rpc CheckAppTrigger(CheckAppTriggerRequest) returns (CheckAppTriggerReply);
+  rpc ListTag(ListTagRequest) returns (ListTagReply);
+
+  // execution
+  rpc IsExecutionExists(IsExecutionExistsRequest)
+      returns (IsExecutionExistsReply);
+  rpc CreateExecution(CreateExecutionRequest) returns (CreateExecutionReply);
+  rpc DeleteExecution(DeleteExecutionRequest) returns (DeleteExecutionReply);
+  rpc KillExecution(KillExecutionRequest) returns (KillExecutionReply);
+  rpc GetExecution(GetExecutionRequest) returns (GetExecutionReply);
+  rpc ListExecution(ListExecutionRequest) returns (ListExecutionReply);
+
+  // task
+  rpc SuspendTask(SuspendTaskRequest) returns (SuspendTaskReply);
+  rpc ResumeTask(ResumeTaskRequest) returns (ResumeTaskReply);
+  rpc RetryTask(RetryTaskRequest) returns (RetryTaskReply);
+
+  // trigger
+  rpc UpdateTrigger(UpdateTriggerRequest) returns (UpdateTriggerReply);
+  rpc ValidateCron(ValidateCronRequest) returns (ValidateCronReply);
+  rpc ListTopic(ListTopicRequest) returns (ListTopicReply);
+  rpc ListQueue(ListQueueRequest) returns (ListQueueReply);
+
+  // User SDK
+  rpc GetInput(GetInputRequest) returns (GetInputReply);
+  rpc WriteOutput(WriteOutputRequest) returns (WriteOutputReply);
+
+  // access control
+  rpc IsAdmin(IsAdminRequest) returns (IsAdminReply);
+
+  rpc Favorite(FavoriteRequest) returns (FavoriteReply);
+  rpc UnFavorite(UnFavoriteRequest) returns (UnFavoriteReply);
+  rpc EmailUnsubscribe(EmailUnsubscribeRequest) returns (EmailUnsubscribeReply);
+  rpc GetUnSubscribe(GetUnSubscribeRequest) returns(GetUnSubscribeReply);
+  rpc EmailReSubscribe(EmailReSubscribeRequest) returns (EmailReSubscribeReply);
+}
+
+message IsApplicationExistsRequest { string name = 1; }
+
+message IsApplicationExistsReply { bool is_exists = 1; }
+
+message IsExecutionExistsRequest { string name = 1; }
+
+message IsExecutionExistsReply { bool is_exists = 1; }
+
+message CreateApplicationRequest {
+  // application name
+  string name = 1;
+
+  // workload type, "Pod", "Batch Job" or "Flow"
+  string workload_type = 2;
+
+  // A big Json string for the workload settings
+  string workload_settings = 3;
+
+  // the input parameter
+  string input = 4;
+
+  // environment variables
+  map<string, string> environment_variables = 5;
+
+  // the tags
+  repeated string tags = 6;
+
+  // triggers
+  repeated Trigger triggers = 7;
+
+  // tasks
+  repeated Task tasks = 8;
+
+  // graph data of flow
+  string flow_graph_data = 9;
+
+  // email notify user list
+  repeated string email_notify_user_list = 10;
+
+  // comments
+  string comment = 11;
+
+  // timeout seconds
+  int64 timeout = 12;
+
+  // max retry times
+  int64 max_retry = 13;
+
+  // viewers
+  repeated string viewers = 14;
+
+  // editors
+  repeated string editors = 15;
+
+  // if notify user by email when execution of the app turn to Failed/Error
+  bool email_notify = 16;
+
+  // tspkg name 
+  string tspkg = 17;
+}
+
+message ScheduledTime {
+  int64 start_time = 1;
+  int32 every = 2;
+  // support: minute, hour, day, month
+  string unit = 3;
+}
+
+message Trigger {
+  // Trigger ID
+  string ID = 1;
+
+  // the trigger type, "timer", "dataset", "topic", "queue" or "app"
+  string type = 2;
+
+  // whether or not this trigger is turned on
+  bool turned_on = 3;
+
+  // cron expression
+  string cron_spec = 4;
+
+  ScheduledTime scheduled_time_data = 5;
+
+  message TopicData {
+    string type = 1;
+    string name = 2;
+    string input_key = 3;
+  }
+  TopicData topicData = 6;
+
+  message QueueData {
+    string type = 1;
+    string name = 2;
+    string input_key = 3;
+  }
+  QueueData queueData = 7;
+
+  message AppData {
+    string status = 1;
+    string application_ID = 2;
+    string application_name = 3;
+  }
+  AppData app_data = 8;
+
+  message DatasetData {
+    string location = 1;
+    string cluster_ID = 2;
+    string cluster_name = 3;
+  }
+  repeated DatasetData dataset_data_list = 9;
+
+  bool recover = 10;
+
+  bool is_repeated = 11;
+
+  int64 last_run = 12;
+
+  string last_run_execution_id = 13;
+  int64 createdAt = 14;
+}
+
+message Task {
+  // task name
+  string name = 1;
+
+  // application the task belongs to
+  string application_ID = 2;
+
+  // task type, support: "App"
+  string type = 3;
+
+  // upstream tasks
+  repeated string upstream_tasks = 4;
+
+  // condition must be satisfied when running this task
+  string when = 5;
+
+  // input parameters
+  string input = 6;
+
+  // environment variables
+  map<string, string> environment_variables = 7;
+
+  // whether the task is suspended
+  bool is_suspended = 8;
+
+  // status of this task
+  string status = 9;
+
+  // the execution ID of this task
+  string execution_ID = 10;
+
+  // application the task belongs to
+  string application_name = 11;
+
+  // result of `when`, can be "Unknown","Satisfied", "Unsatisfied".
+  string result = 12;
+}
+
+message CreateApplicationReply {
+  // the application created
+  Application result = 1;
+}
+
+message Application {
+  // application name
+  string name = 1;
+
+  // the workload type
+  string workload_type = 2;
+
+  // the workload settings
+  string workload_settings = 3;
+
+  // the input parameters
+  string input = 4;
+
+  // the environment variables
+  map<string, string> environment_variables = 5;
+
+  // the tags
+  repeated string tags = 6;
+
+  // the triggers
+  repeated Trigger triggers = 7;
+
+  // the creator of this application
+  string creator = 8;
+
+  // the application ID
+  string application_ID = 9;
+
+  // the Cluster Name
+  string cluster_name = 10;
+
+  // the created time
+  int64 created_time = 11;
+
+  // the Cluster ID
+  string cluster_ID = 12;
+
+  // the tasks
+  repeated Task tasks = 13;
+
+  // graph data of flow
+  string flow_graph_data = 14;
+
+  // if notify user by email when execution of the app turn to Failed/Error
+  bool email_notify = 15;
+  // user list, notify user by email when execution of the app turn to
+  // Failed/Error
+  repeated string email_notify_user_list = 16;
+
+  // the comments
+  string comment = 17;
+
+  // timeout seconds
+  int64 timeout = 18;
+
+  // max retry times
+  int64 max_retry = 19;
+
+  // current retry times
+  int64 cur_retry_count = 20;
+
+  // viewers
+  repeated string viewers = 21;
+
+  // editors
+  repeated string editors = 22;
+
+  // favorite users
+  repeated string favorited_by = 23;
+
+  repeated Event system_log = 24;
+
+  // tspkg name
+  string tspkg = 25;
+}
+
+message DeleteApplicationRequest {
+  // the applications to be deleted
+  repeated string application_IDs = 1;
+}
+
+message DeleteApplicationReply {
+  // application names successfully deleted
+  repeated string succeeded = 1;
+
+  // application names failed to delete
+  repeated string failed = 2;
+}
+
+message UpdateApplicationRequest {
+  // used for solving update concurrent problem
+  Application old_application_info = 1;
+  Application update_application_info = 2;
+}
+
+message UpdateApplicationReply {
+  // the updated application
+  Application application = 1;
+  repeated string failed_update_field = 2;
+}
+
+message SuspendTaskRequest {
+  // If you pass task name and application ID, the task of the flow application
+  // will be suspended.
+  // If you pass task name and execution ID, the task of the flow execution will
+  // be suspended.
+  // If you pass execution ID, the whole flow execution will be suspended.
+  string application_ID = 1;
+  string execution_ID = 2;
+  string task_name = 3;
+}
+
+message SuspendTaskReply {}
+
+message ResumeTaskRequest {
+  // If you pass task name and application ID, the task of the flow application
+  // will be resume.
+  // If you pass task name and execution ID, the task of the flow execution will
+  // be resume.
+  // If you pass execution ID, the whole flow execution will be resume.
+  string application_ID = 1;
+  string execution_ID = 2;
+  string task_name = 3;
+}
+
+message ResumeTaskReply {}
+
+message RetryTaskRequest {
+  // If you pass task name and execution ID, the task of the flow execution will
+  // be retry.
+  // If you pass execution ID, the whole flow execution will be retry.
+  string execution_ID = 1;
+  string task_name = 2;
+}
+
+message RetryTaskReply {}
+
+message GetApplicationRequest {
+  // the application ID
+  string application_ID = 1;
+}
+
+message GetApplicationReply {
+  // the application
+  Application result = 1;
+}
+
+message ListApplicationRequest {
+  // filters, OR relation within a filter
+  //         AND relation between all filters
+  // fuzzy search field, support search for application name or creator
+  string search_field = 1;
+
+  // cluster name filter
+  string cluster_name = 2;
+
+  // tags filter
+  repeated string tags = 3;
+
+  // filter applications that has specified type turnedOn triggers.
+  repeated string trigger_types = 4;
+
+  // the workload type
+  string workload_type = 5;
+
+  // editable filter, true if search for my apps, false if search for all
+  // apps
+  string editType = 6;
+
+  // the order for create time,
+  // a value of 1 or -1 to specify an ascending or descending order
+  // respectively.
+  // 0 if no order is specified
+  int32 order_by_create_time = 7;
+
+  // the page index, zero indexed
+  int32 page_idx = 8;
+
+  // the page size, if page size is 0 or page size exceed the maximum page size
+  // allowed
+  // then the maximum page size is used (1024)
+  int32 page_size = 9;
+
+  // to filter favorite
+  bool favorited_by = 10;
+}
+
+message ListApplicationReply {
+  // the applications
+  repeated ApplicationInfo application_infos = 1;
+
+  // the total number of applications
+  int32 total = 2;
+}
+
+message ApplicationInfo {
+  string name = 1;
+  string application_ID = 2;
+  string workload_type = 3;
+  string cluster_name = 4;
+  repeated string tags = 5;
+  string creator = 6;
+  int64 created_time = 7;
+  repeated Trigger triggers = 8;
+  string comment = 9;
+  int64 timeout = 10;
+  int64 max_retry = 11;
+  int64 cur_retry_count = 12;
+  repeated string viewers = 13;
+  repeated string editors = 14;
+  repeated string favorited_by = 15;
+  repeated string email_notify_user_list = 16;
+  bool email_notify = 17;
+  string tspkg = 18;
+}
+
+message TriggeredBy {
+  // type of the trigger which the execution was triggered by:
+  // api, web, flow, timer, topic, queue
+  string type = 1;
+
+  // cron expression, scheduled time data, execution ID,
+  // topic name, or queue name.
+  string data = 2;
+
+  // the execution ID for app trigger, flow trigger
+  string execution_ID = 3;
+}
+
+message CreateExecutionRequest {
+  // the execution name
+  string name = 1;
+
+  // workload type, "Pod", "Batch Job" or "Flow"
+  string workload_type = 2;
+
+  // A big Json string for the workload settings
+  string workload_settings = 3;
+
+  // the input parameters
+  string input = 4;
+
+  // the environment variables
+  map<string, string> environment_variables = 5;
+
+  // use env of the application for keys not set in environment_variables
+  bool use_default_env = 6;
+
+  // the application it belongs to, "" if it doesn't belong to any
+  // application.
+  string application_ID = 7;
+
+  TriggeredBy triggered_by = 8;
+
+  // if notify user by email when execution of the app turn to Failed/Error
+  bool email_notify = 9;
+  // user list, notify user by email when execution of the app turn to
+  // Failed/Error
+  repeated string email_notify_user_list = 10;
+
+  // the comment message of the execution
+  string comment = 11;
+
+  // timeout seconds, 0 means never timeout.
+  int64 timeout = 12;
+
+  // maximum retry times when execution failed.
+  int64 max_retry = 13;
+
+  string cluster_ID = 14;
+
+  string cluster_name = 15;
+
+  // users that can view(List) this execution.
+  repeated string viewers = 16;
+
+  // users that can edit(List/Get/Update/Delete/Kill) this execution.
+  repeated string editors = 17;
+
+  // the name of dataset that this execution is handling.
+  string dataset_name = 18;
+
+  // tspkg name
+  string tspkg = 19;
+}
+
+message CreateExecutionReply {
+  // the execution created
+  Execution result = 1;
+}
+
+message Event {
+  int64 time_stamp = 1;
+  string message = 2;
+}
+
+message Execution {
+  // the status
+  string status = 1;
+
+  // the execution name
+  string name = 2;
+
+  // the workload type
+  string workload_type = 3;
+
+  // the cluster name
+  string cluster_name = 4;
+
+  // the application Name this execution belongs to, "" if it doesn't belong to
+  // any application
+  string application_name = 5;
+
+  string application_ID = 6;
+
+  // the task this execution belongs to, "" if it doesn't belong to any task
+  string task_name = 7;
+
+  // the creator of this application
+  string creator = 8;
+
+  // the execution start time
+  int64 start_time = 9;
+
+  // the execution finish time, if not finished, 0 is returned
+  int64 finish_time = 10; // if not finished, 0 is returned
+
+  // the json string for workload settings
+  string workload_settings = 11;
+
+  // the execution ID
+  string execution_ID = 12;
+
+  // the input parameter
+  string input = 13;
+
+  // the output
+  map<string, string> output = 14;
+
+  string workload_ID = 15;
+
+  string cluster_ID = 16;
+
+  map<string, string> environment_variables = 17;
+
+  // the flowExecutionID it belongs to, "" if it doesn't belong to any task
+  string flow_execution_ID = 18;
+
+  // the execution whether should be suspended or not at this stage
+  bool is_suspended = 19;
+
+  // tasks it has, only workflow execution has this field
+  repeated Task tasks = 20;
+
+  // type of the trigger which the execution was triggered by
+  TriggeredBy triggered_by = 21;
+
+  // if notify user by email when execution of the app turn to Failed/Error
+  bool email_notify = 22;
+  // user list, notify user by email when execution of the app turn to
+  // Failed/Error
+  repeated string email_notify_user_list = 23;
+
+  // comment message of the execution
+  string comment = 24;
+
+  // timeout seconds
+  int64 timeout = 25;
+
+  // System log
+  repeated Event system_log = 26;
+
+  // max retry times
+  int64 max_retry = 27;
+
+  // current retry times
+  int64 cur_retry_count = 28;
+
+  // viewers
+  repeated string viewers = 29;
+
+  // editors
+  repeated string editors = 30;
+
+  // favorite users
+  repeated string favorited_by = 31;
+
+  // dataset name
+  string dataset_name = 32;
+
+  // if tspkg invoke
+  string tspkg = 33;
+}
+
+message DeleteExecutionRequest {
+  // the executions to be deleted
+  repeated string execution_IDs = 1;
+}
+
+message DeleteExecutionReply {
+  // execution names successfully deleted
+  repeated string succeeded = 1;
+
+  // execution names failed to delete
+  repeated string failed = 2;
+}
+
+message KillExecutionRequest {
+  // the execution to be killed
+  string execution_ID = 1;
+}
+
+message KillExecutionReply {
+  // the killed execution
+  string execution_name = 1;
+}
+
+message GetExecutionRequest {
+  // the execution ID
+  string execution_ID = 1;
+}
+
+message GetExecutionReply {
+  // the execution result
+  Execution result = 1;
+}
+
+message ListExecutionRequest {
+  // filters, OR relation within a filter
+  //         AND relation between all filters
+  // fuzzy search field, support search for execution name or creator
+  string search_field = 1;
+
+  // status filter
+  repeated string status = 2;
+
+  // workload type filter
+  string workload_type = 3;
+
+  // cluster name filter
+  string cluster_name = 4;
+
+  // application id filter
+  string application_ID = 5;
+
+  // editable filter, true if search for my executions, false if search for all
+  // executions
+  string editType = 6;
+
+  // order by which field, "start time" or "finish time"
+  string order_field = 7;
+
+  // a value of 1 or -1 to specify an ascending or descending order
+  // respectively.
+  // 0 if no order is specified
+  int32 order_by = 8;
+
+  // the page index, zero indexed
+  int32 page_idx = 9;
+
+  // the page size, if page size is 0 or page size exceed the maximum page size
+  // allowed
+  // then the maximum page size is used (1024)
+  int32 page_size = 10;
+
+  repeated string triggered_by = 11;
+
+  // to filter the executions of specified task of a flow app.
+  string flow_application_ID = 12;
+
+  // to filter the executions of specified task of a flow app.
+  string task_name = 13;
+
+  // to filter favorite
+  bool favorited_by = 14;
+
+  // filter dataset name
+  string dataset_name = 15;
+}
+
+message ListExecutionReply {
+  // the executions
+  repeated ExecutionInfo execution_infos = 1;
+
+  // the total number of executions
+  int32 total = 2;
+}
+
+message ExecutionInfo {
+  string name = 1;
+
+  string execution_ID = 2;
+
+  string status = 3;
+
+  string workload_type = 4;
+
+  string workload_ID = 5;
+
+  string cluster_ID = 6;
+
+  string cluster_name = 7;
+
+  string application_ID = 8;
+
+  string application_name = 9;
+
+  string creator = 10;
+
+  int64 start_time = 11;
+  // the finish time, if not finished, return 0
+  int64 finish_time = 12;
+
+  TriggeredBy triggered_by = 13;
+
+  bool is_suspended = 14;
+
+  int32 succeeded_task_count = 15;
+
+  int32 failed_task_count = 16;
+
+  int32 error_task_count = 17;
+
+  int32 started_task_count = 18;
+
+  int32 suspended_task_count = 19;
+
+  int32 none_task_count = 20;
+
+  int64 timeout = 21;
+
+  int64 max_retry = 22;
+
+  int64 cur_retry_count = 23;
+
+  repeated string viewers = 24;
+
+  repeated string editors = 25;
+
+  repeated Task tasks = 26;
+
+  repeated string favorited_by = 27;
+
+  string dataset_name = 28;
+
+  repeated string email_notify_user_list = 29;
+
+  bool email_notify = 30;
+
+  string tspkg = 31;
+}
+
+message GetInputRequest { string execution_ID = 1; }
+
+message GetInputReply { string Input = 1; }
+
+message WriteOutputRequest {
+  string execution_ID = 1;
+  string pod_hostname = 2;
+  string output = 3;
+}
+
+message WriteOutputReply {}
+
+message ListTagRequest {}
+
+message ListTagReply {
+  repeated string tags = 1;
+  int32 total = 2;
+}
+
+message UpdateTriggerRequest {
+  string trigger_ID = 1;
+  bool turned_on = 2;
+}
+
+message UpdateTriggerReply {
+  string trigger_ID = 1;
+  bool current_status = 2;
+}
+
+message ValidateCronRequest { string data = 1; }
+
+message ValidateCronReply {}
+
+message UpdateEmailNotifyRequest {
+  string application_ID = 1;
+  string execution_ID = 2;
+  repeated string email_notify_user_list = 3;
+  bool email_notify = 4;
+}
+
+message UpdateEmailNotifyReply {}
+
+message CheckAppTriggerRequest {
+  string application_ID = 1;
+  string trigger_application_ID = 2;
+  string status = 3;
+}
+
+message CheckAppTriggerReply {}
+
+message IsAdminRequest {}
+
+message IsAdminReply { bool admin = 1; }
+
+message FavoriteRequest {
+  string ID = 1;
+  // Application or Execution
+  string type = 2;
+}
+
+message FavoriteReply {}
+
+message UnFavoriteRequest {
+  string ID = 1;
+  // Application or Execution
+  string type = 2;
+}
+
+message UnFavoriteReply {}
+
+message ListTopicRequest { string type = 1; }
+
+message ListTopicReply {
+  string type = 1;
+  repeated string topics = 2;
+  string dataset_topic = 3;
+}
+
+message ListQueueRequest {}
+
+message ListQueueReply {
+  repeated string queues = 1;
+}
+message EmailUnsubscribeRequest {
+  string UID = 1;
+  string execution_ID = 2;
+}
+
+message EmailUnsubscribeReply {}
+
+message GetUnSubscribeRequest {
+  string UID = 1;
+  string appID = 2;
+}
+
+message unSubscriptionMail {
+  string UID = 1;
+  string appID = 2;
+  bool active = 3;
+  string handler = 4;
+  int64 createTime = 5;
+  int64 updateTime = 6;
+}
+
+message GetUnSubscribeReply {
+  repeated unSubscriptionMail data = 1;
+}
+
+message EmailReSubscribeRequest {
+  string UID = 1;
+  string execution_ID = 2;
+}
+
+message EmailReSubscribeReply {}
