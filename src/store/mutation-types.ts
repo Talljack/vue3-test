@@ -1,0 +1,3 @@
+export const UPDATE_TOKEN = "UPDATE_TOKEN";
+export const MODIFY_ADMIN = "MODIFY_ADMIN";
+export const MODIFY_USER_INFO = "MODIFY_USER_INFO";
